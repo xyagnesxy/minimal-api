@@ -26,70 +26,11 @@ if (string.IsNullOrEmpty(key)) {
     key = "123456";
 }
 
-builder.Services.AddAuthentication(option =>
-{
-    option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        //ValidateIssuer = false,
-        ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
-
-});
-
-builder.Services.AddAuthorization();
-
-builder.Services.AddScoped<IAdministradorServico, AdministradorServico>();
-builder.Services.AddScoped<IVeiculoServico, VeiculoServico>();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Insira o token JWT aqui"
-    });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-
-});
-
-builder.Services.AddDbContext<DbContexto>(options =>
-{
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("mysql"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("mysql"))
-    );
-});
-
 var app = builder.Build();
 
 #endregion
+
+
 
 
 #region Home
@@ -313,15 +254,9 @@ app.MapDelete("/veiculos/{id}", ([FromRoute]int id, IVeiculoServico veiculoServi
     return Results.NoContent();
 }).RequireAuthorization().RequireAuthorization(new AuthorizeAttribute{Roles = "Adm"}).WithTags("Veículos");
 
-#endregion
-
 
 #region App
-app.UseSwagger();
-app.UseSwaggerUI();
 
-app.UseAuthentication();
-app.UseAuthorization();
 app.Run();
 #endregion
 
